@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#126b59" />
+    <title>Barangay Healthcare Patient Follow-up Check-up System</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --green: #126b59;
+        --green-dark: #0c5145;
+        --mint: #e8f5ef;
+        --ink: #19332e;
+        --muted: #647a74;
+        --line: #dce9e3;
+        --paper: #fff;
+        --canvas: #f5f8f6;
+        --amber: #996700;
+        --red: #a63d3d;
+        font-family: Inter, "Segoe UI", Arial, sans-serif;
+      }
+
+      * { box-sizing: border-box; }
+      body { margin: 0; min-height: 100vh; color: var(--ink); background: var(--canvas); }
+      button, input, select, textarea { font: inherit; }
+      button { cursor: pointer; }
+      .hidden { display: none !important; }
+
+      .auth-screen {
+        min-height: 100vh;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(360px, 0.9fr);
+        background: var(--paper);
+      }
+
+      .welcome-panel {
+        padding: clamp(32px, 7vw, 88px);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        color: #fff;
+        background:
+          radial-gradient(ellipse at 18% 82%, rgba(116, 208, 164, .22), transparent 40%),
+          linear-gradient(145deg, #0d594b, #16816a);
+      }
+
+      .brand-mark {
+        display: grid;
+        place-items: center;
+        width: 52px;
+        height: 52px;
+        border: 1px solid rgba(255,255,255,.35);
+        border-radius: 16px;
+        background: rgba(255,255,255,.12);
+        font-size: 26px;
+      }
+
+      .welcome-copy { max-width: 560px; margin: 70px 0; }
+      .eyebrow { margin: 0 0 14px; font-size: .76rem; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; opacity: .8; }
+      .welcome-copy h1 { margin: 0; font-size: clamp(2.4rem, 5vw, 4.5rem); line-height: 1.06; letter-spacing: -.045em; }
+      .welcome-copy p { max-width: 440px; margin: 22px 0 0; color: rgba(255,255,255,.82); font-size: 1.08rem; line-height: 1.7; }
+      .privacy-note { max-width: 500px; color: rgba(255,255,255,.76); font-size: .82rem; line-height: 1.55; }
+
+      .auth-content { display: grid; place-items: center; padding: 32px; }
+      .auth-card { width: min(100%, 430px); }
+      .auth-card h2 { margin: 0; font-size: 1.8rem; letter-spacing: -.03em; }
+      .auth-intro { margin: 10px 0 26px; color: var(--muted); line-height: 1.55; }
+      .form-fields { display: grid; gap: 16px; }
+      .field { display: grid; gap: 7px; }
+      .field label { color: #425c55; font-size: .86rem; font-weight: 700; }
+      .field input, .field select, .field textarea, .search-input {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 12px 13px;
+        background: #fff;
+        color: var(--ink);
+      }
+      .field input:focus, .field select:focus, .field textarea:focus, .search-input:focus {
+        border-color: var(--green);
+        outline: 3px solid rgba(18,107,89,.12);
+      }
+      .field textarea { min-height: 86px; resize: vertical; }
+      .primary-button, .secondary-button, .link-button {
+        border: 0;
+        border-radius: 10px;
+        padding: 12px 16px;
+        font-weight: 750;
+      }
+      .primary-button { color: #fff; background: var(--green); }
+      .primary-button:hover { background: var(--green-dark); }
+      .auth-card > .primary-button { width: 100%; margin-top: 20px; }
+      .secondary-button { color: var(--green-dark); background: var(--mint); }
+      .link-button { padding: 4px; color: var(--green); background: transparent; }
+      .auth-switch { margin: 20px 0 0; color: var(--muted); text-align: center; font-size: .92rem; }
+      .auth-message { min-height: 20px; margin: 12px 0 0; color: var(--red); font-size: .88rem; line-height: 1.45; }
+      .auth-message.success { color: var(--green); }
+
+      .app-shell { min-height: 100vh; }
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 17px clamp(20px, 5vw, 64px);
+        background: var(--paper);
+        border-bottom: 1px solid var(--line);
+      }
+      .topbar-brand { display: flex; align-items: center; gap: 12px; }
+      .topbar .brand-mark { width: 42px; height: 42px; border: 0; color: #fff; background: var(--green); font-size: 21px; }
+      .topbar-title { margin: 0; font-size: 1rem; line-height: 1.3; }
+      .topbar-subtitle { margin: 3px 0 0; color: var(--muted); font-size: .8rem; }
+      .user-controls { display: flex; align-items: center; gap: 14px; }
+      .user-label { color: var(--muted); font-size: .88rem; }
+      .page-content { width: min(1320px, 100%); margin: 0 auto; padding: 32px clamp(18px, 4vw, 48px) 48px; }
+      .page-heading { display: flex; justify-content: space-between; align-items: end; gap: 20px; margin-bottom: 22px; }
+      .page-heading h2 { margin: 0; font-size: clamp(1.7rem, 3vw, 2.2rem); letter-spacing: -.04em; }
+      .page-heading p { margin: 7px 0 0; color: var(--muted); }
+      .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px; margin-bottom: 22px; }
+      .stat-card, .panel { border: 1px solid var(--line); border-radius: 14px; background: var(--paper); box-shadow: 0 4px 14px rgba(19,61,49,.035); }
+      .stat-card { padding: 18px 20px; }
+      .stat-card span { display: block; color: var(--muted); font-size: .84rem; }
+      .stat-card strong { display: block; margin-top: 8px; font-size: 1.8rem; }
+      .panel { overflow: hidden; }
+      .panel-header { padding: 19px 21px; border-bottom: 1px solid var(--line); }
+      .panel-header h3 { margin: 0; font-size: 1.12rem; }
+      .tracker-layout { display: grid; grid-template-columns: minmax(270px, .75fr) minmax(0, 1.8fr); gap: 20px; align-items: start; }
+      .patient-form { display: grid; gap: 14px; padding: 20px; }
+      .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
+      .form-grid .wide { grid-column: 1 / -1; }
+      .table-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 15px 18px; border-bottom: 1px solid var(--line); }
+      .table-toolbar h3 { margin: 0; font-size: 1rem; }
+      .search-input { max-width: 270px; padding: 9px 11px; }
+      .table-wrap { overflow-x: auto; }
+      table { width: 100%; border-collapse: collapse; min-width: 730px; }
+      th, td { padding: 13px 15px; border-bottom: 1px solid #edf2ef; text-align: left; vertical-align: top; }
+      th { color: var(--muted); background: #f9fbfa; font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; }
+      td { font-size: .87rem; line-height: 1.45; }
+      td small { color: var(--muted); }
+      .status { display: inline-block; padding: 5px 8px; border-radius: 99px; background: #e7f4ed; color: var(--green-dark); font-size: .72rem; font-weight: 750; white-space: nowrap; }
+      .status.scheduled { background: #fff2d6; color: var(--amber); }
+      .status.completed { background: #e8eefb; color: #405b94; }
+      .row-actions { display: flex; gap: 6px; }
+      .row-button { padding: 6px 8px; border: 1px solid var(--line); border-radius: 7px; color: var(--green-dark); background: #fff; font-size: .75rem; }
+      .row-button.delete { color: var(--red); }
+      .empty-row { padding: 28px; color: var(--muted); text-align: center; }
+      .app-footer { padding: 18px; color: var(--muted); text-align: center; font-size: .76rem; }
+
+      @media (max-width: 900px) {
+        .auth-screen { grid-template-columns: 1fr; }
+        .welcome-panel { min-height: 320px; padding: 30px; }
+        .welcome-copy { margin: 38px 0; }
+        .welcome-copy h1 { font-size: clamp(2.25rem, 9vw, 3.2rem); }
+        .privacy-note { display: none; }
+        .auth-content { padding: 42px 24px; }
+        .tracker-layout { grid-template-columns: 1fr; }
+      }
+      @media (max-width: 600px) {
+        .topbar { align-items: flex-start; padding: 14px 16px; }
+        .topbar-subtitle, .user-label { display: none; }
+        .page-content { padding: 24px 14px 36px; }
+        .page-heading { align-items: flex-start; flex-direction: column; }
+        .stats { gap: 9px; }
+        .stat-card { padding: 14px 12px; }
+        .stat-card span { font-size: .73rem; }
+        .stat-card strong { font-size: 1.45rem; }
+        .form-grid { grid-template-columns: 1fr; }
+        .form-grid .wide { grid-column: auto; }
+        .table-toolbar { align-items: stretch; flex-direction: column; }
+        .search-input { max-width: none; }
+        .user-controls { gap: 7px; }
+      }
+    </style>
+  </head>
+  <body>
+    <main id="authScreen" class="auth-screen">
+      <section class="welcome-panel" aria-label="Welcome">
+        <div class="brand-mark" aria-hidden="true">✚</div>
+        <div class="welcome-copy">
+          <p class="eyebrow">Community care, organized</p>
+          <h1>Barangay Healthcare Patient Follow-up Check-up System</h1>
+          <p>Keep track of patient visits and upcoming check-ups with a simple health center workspace.</p>
+        </div>
+        <p class="privacy-note">Demo application: accounts and patient records are saved only in this browser. Do not enter real patient information.</p>
+      </section>
+
+      <section class="auth-content">
+        <div id="registerCard" class="auth-card">
+          <p class="eyebrow" style="color: var(--green);">Get started</p>
+          <h2>Create your account</h2>
+          <p class="auth-intro">Set up an account before signing in to the health center tracker.</p>
+          <form id="registerForm" novalidate>
+            <div class="form-fields">
+              <div class="field">
+                <label for="registerName">Your name</label>
+                <input id="registerName" name="name" autocomplete="name" required />
+              </div>
+              <div class="field">
+                <label for="registerEmail">Email address</label>
+                <input id="registerEmail" name="email" type="email" autocomplete="email" required />
+              </div>
+              <div class="field">
+                <label for="registerPassword">Password</label>
+                <input id="registerPassword" name="password" type="password" autocomplete="new-password" minlength="8" required />
+              </div>
+              <div class="field">
+                <label for="confirmPassword">Confirm password</label>
+                <input id="confirmPassword" name="confirmPassword" type="password" autocomplete="new-password" minlength="8" required />
+              </div>
+            </div>
+            <p id="registerMessage" class="auth-message" role="status" aria-live="polite"></p>
+            <button class="primary-button" type="submit">Create account</button>
+          </form>
+          <p class="auth-switch">Already have an account? <button id="showLogin" class="link-button" type="button">Sign in</button></p>
+        </div>
+
+        <div id="loginCard" class="auth-card hidden">
+          <p class="eyebrow" style="color: var(--green);">Welcome back</p>
+          <h2>Sign in</h2>
+          <p class="auth-intro">Sign in to manage patient follow-ups and check-up visits.</p>
+          <form id="loginForm" novalidate>
+            <div class="form-fields">
+              <div class="field">
+                <label for="loginEmail">Email address</label>
+                <input id="loginEmail" name="email" type="email" autocomplete="email" required />
+              </div>
+              <div class="field">
+                <label for="loginPassword">Password</label>
+                <input id="loginPassword" name="password" type="password" autocomplete="current-password" required />
+              </div>
+            </div>
+            <p id="loginMessage" class="auth-message" role="status" aria-live="polite"></p>
+            <button class="primary-button" type="submit">Sign in</button>
+          </form>
+          <p class="auth-switch">New here? <button id="showRegister" class="link-button" type="button">Create an account</button></p>
+        </div>
+      </section>
+    </main>
+
+    <div id="appShell" class="app-shell hidden">
+      <header class="topbar">
+        <div class="topbar-brand">
+          <div class="brand-mark" aria-hidden="true">✚</div>
+          <div>
+            <h1 class="topbar-title">Barangay Healthcare Patient Follow-up</h1>
+            <p class="topbar-subtitle">Check-up and patient visit tracker</p>
+          </div>
+        </div>
+        <div class="user-controls">
+          <span id="signedInUser" class="user-label"></span>
+          <button id="logoutButton" class="secondary-button" type="button">Sign out</button>
+        </div>
+      </header>
+
+      <main class="page-content">
+        <div class="page-heading">
+          <div>
+            <h2>Patient follow-ups</h2>
+            <p>Record visits and keep upcoming check-ups visible.</p>
+          </div>
+        </div>
+
+        <section class="stats" aria-label="Patient visit summary">
+          <article class="stat-card"><span>Patient records</span><strong id="totalCount">0</strong></article>
+          <article class="stat-card"><span>Upcoming check-ups</span><strong id="upcomingCount">0</strong></article>
+          <article class="stat-card"><span>Completed visits</span><strong id="completedCount">0</strong></article>
+        </section>
+
+        <div class="tracker-layout">
+          <section class="panel">
+            <div class="panel-header"><h3 id="formTitle">Add patient visit</h3></div>
+            <form id="patientForm" class="patient-form">
+              <input id="patientId" name="patientId" type="hidden" />
+              <div class="form-grid">
+                <div class="field wide">
+                  <label for="patientName">Patient name</label>
+                  <input id="patientName" name="patientName" autocomplete="off" required />
+                </div>
+                <div class="field">
+                  <label for="patientAge">Age</label>
+                  <input id="patientAge" name="age" type="number" min="0" max="130" required />
+                </div>
+                <div class="field">
+                  <label for="patientContact">Contact number</label>
+                  <input id="patientContact" name="contact" type="tel" autocomplete="off" />
+                </div>
+                <div class="field wide">
+                  <label for="patientAddress">Barangay / address</label>
+                  <input id="patientAddress" name="address" autocomplete="off" />
+                </div>
+                <div class="field">
+                  <label for="visitDate">Visit date</label>
+                  <input id="visitDate" name="visitDate" type="date" required />
+                </div>
+                <div class="field">
+                  <label for="followUpDate">Next check-up</label>
+                  <input id="followUpDate" name="followUpDate" type="date" />
+                </div>
+                <div class="field">
+                  <label for="visitStatus">Visit status</label>
+                  <select id="visitStatus" name="status">
+                    <option value="Follow-up scheduled">Follow-up scheduled</option>
+                    <option value="Completed">Completed</option>
+                  </select>
+                </div>
+                <div class="field wide">
+                  <label for="visitNotes">Reason for visit / notes</label>
+                  <textarea id="visitNotes" name="notes" placeholder="Reason for visit or follow-up instructions"></textarea>
+                </div>
+              </div>
+              <div style="display:flex; gap:9px; flex-wrap:wrap;">
+                <button id="savePatientButton" class="primary-button" type="submit">Save visit</button>
+                <button id="cancelEditButton" class="secondary-button hidden" type="button">Cancel edit</button>
+              </div>
+            </form>
+          </section>
+
+          <section class="panel">
+            <div class="table-toolbar">
+              <h3>Visit records</h3>
+              <input id="searchInput" class="search-input" type="search" placeholder="Search patients" aria-label="Search patient records" />
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Patient</th>
+                    <th>Age</th>
+                    <th>Visit date</th>
+                    <th>Next check-up</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="patientTableBody"></tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+        <p class="app-footer">Demo only. This browser-based tracker is not a secure medical records system.</p>
+      </main>
+    </div>
+
+    <script>
+      const ACCOUNTS_KEY = "barangayCareAccounts";
+      const SESSION_KEY = "barangayCareSession";
+      const DATA_PREFIX = "barangayCarePatients:";
+      const authScreen = document.getElementById("authScreen");
+      const appShell = document.getElementById("appShell");
+      const registerCard = document.getElementById("registerCard");
+      const loginCard = document.getElementById("loginCard");
+      const registerForm = document.getElementById("registerForm");
+      const loginForm = document.getElementById("loginForm");
+      const patientForm = document.getElementById("patientForm");
+      const tableBody = document.getElementById("patientTableBody");
+      const searchInput = document.getElementById("searchInput");
+      let currentAccount = null;
+      let patients = [];
+
+      function getAccounts() {
+        const stored = localStorage.getItem(ACCOUNTS_KEY);
+        if (!stored) return [];
+        const accounts = JSON.parse(stored);
+        if (!Array.isArray(accounts)) throw new Error("Saved account data is invalid.");
+        return accounts;
+      }
+
+      function setMessage(id, message, success) {
+        const element = document.getElementById(id);
+        element.textContent = message;
+        element.classList.toggle("success", Boolean(success));
+      }
+
+      function showAuth(mode) {
+        authScreen.classList.remove("hidden");
+        appShell.classList.add("hidden");
+        const registering = mode === "register";
+        registerCard.classList.toggle("hidden", !registering);
+        loginCard.classList.toggle("hidden", registering);
+      }
+
+      async function hashPassword(password, salt) {
+        const keyMaterial = await crypto.subtle.importKey(
+          "raw",
+          new TextEncoder().encode(password),
+          "PBKDF2",
+          false,
+          ["deriveBits"]
+        );
+        const derived = await crypto.subtle.deriveBits({
+          name: "PBKDF2",
+          salt,
+          iterations: 120000,
+          hash: "SHA-256"
+        }, keyMaterial, 256);
+        return Array.from(new Uint8Array(derived), byte => byte.toString(16).padStart(2, "0")).join("");
+      }
+
+      function encodeBase64(bytes) {
+        return btoa(String.fromCharCode(...new Uint8Array(bytes)));
+      }
+
+      async function register(event) {
+        event.preventDefault();
+        setMessage("registerMessage", "", false);
+        if (!registerForm.reportValidity()) return;
+        const formData = new FormData(registerForm);
+        const name = String(formData.get("name")).trim();
+        const email = String(formData.get("email")).trim().toLowerCase();
+        const password = String(formData.get("password"));
+        const confirmation = String(formData.get("confirmPassword"));
+
+        if (!name || !email || !password || !confirmation) {
+          setMessage("registerMessage", "Please complete all fields.", false);
+          return;
+        }
+        if (password.length < 8) {
+          setMessage("registerMessage", "Use a password with at least 8 characters.", false);
+          return;
+        }
+        if (password !== confirmation) {
+          setMessage("registerMessage", "The passwords do not match.", false);
+          return;
+        }
+        if (!crypto.subtle) {
+          setMessage("registerMessage", "Password protection requires a secure browser context (HTTPS or localhost).", false);
+          return;
+        }
+
+        try {
+          const accounts = getAccounts();
+          if (accounts.some(account => account.email === email)) {
+            setMessage("registerMessage", "An account with this email already exists. Please sign in.", false);
+            return;
+          }
+          const salt = crypto.getRandomValues(new Uint8Array(16));
+          const passwordHash = await hashPassword(password, salt);
+          accounts.push({ name, email, salt: encodeBase64(salt), passwordHash });
+          localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
+          registerForm.reset();
+          document.getElementById("loginEmail").value = email;
+          showAuth("login");
+          setMessage("loginMessage", "Account created. Sign in with your email and password.", true);
+        } catch (error) {
+          setMessage("registerMessage", "Could not save your account in this browser. Check storage permissions and try again.", false);
+          console.error("Account registration failed:", error);
+        }
+      }
+
+      async function signIn(event) {
+        event.preventDefault();
+        setMessage("loginMessage", "", false);
+        if (!loginForm.reportValidity()) return;
+        const formData = new FormData(loginForm);
+        const email = String(formData.get("email")).trim().toLowerCase();
+        const password = String(formData.get("password"));
+        if (!email || !password) {
+          setMessage("loginMessage", "Enter your email and password.", false);
+          return;
+        }
+        if (!crypto.subtle) {
+          setMessage("loginMessage", "Sign-in requires a secure browser context (HTTPS or localhost).", false);
+          return;
+        }
+
+        try {
+          const account = getAccounts().find(item => item.email === email);
+          if (!account) {
+            setMessage("loginMessage", "No account found. Create an account first.", false);
+            return;
+          }
+          const salt = Uint8Array.from(atob(account.salt), character => character.charCodeAt(0));
+          const passwordHash = await hashPassword(password, salt);
+          if (passwordHash !== account.passwordHash) {
+            setMessage("loginMessage", "Email or password is incorrect.", false);
+            return;
+          }
+          currentAccount = account;
+          sessionStorage.setItem(SESSION_KEY, account.email);
+          loginForm.reset();
+          openTracker();
+        } catch (error) {
+          setMessage("loginMessage", "Could not sign in using the saved account data.", false);
+          console.error("Sign-in failed:", error);
+        }
+      }
+
+      function openTracker() {
+        if (!currentAccount) return;
+        authScreen.classList.add("hidden");
+        appShell.classList.remove("hidden");
+        document.getElementById("signedInUser").textContent = currentAccount.name;
+        try {
+          const stored = localStorage.getItem(DATA_PREFIX + currentAccount.email);
+          patients = stored ? JSON.parse(stored) : [];
+          if (!Array.isArray(patients)) throw new Error("Saved patient data is invalid.");
+        } catch (error) {
+          patients = [];
+          window.alert("Patient records could not be loaded from this browser. Please check the saved data before continuing.");
+          console.error("Patient records could not be loaded:", error);
+        }
+        render();
+      }
+
+      function persistPatients() {
+        if (!currentAccount) return;
+        try {
+          localStorage.setItem(DATA_PREFIX + currentAccount.email, JSON.stringify(patients));
+        } catch (error) {
+          window.alert("Could not save this record in the browser. Check available storage and try again.");
+          console.error("Patient record save failed:", error);
+          throw error;
+        }
+      }
+
+      function dateLabel(value) {
+        if (!value) return "Not set";
+        const date = new Date(value + "T00:00:00");
+        return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString(undefined, {
+          year: "numeric", month: "short", day: "numeric"
+        });
+      }
+
+      function render() {
+        const query = searchInput.value.trim().toLowerCase();
+        const filtered = patients.filter(patient =>
+          [patient.name, patient.contact, patient.address, patient.notes].join(" ").toLowerCase().includes(query)
+        );
+        document.getElementById("totalCount").textContent = patients.length;
+        document.getElementById("upcomingCount").textContent = patients.filter(patient => patient.status === "Follow-up scheduled").length;
+        document.getElementById("completedCount").textContent = patients.filter(patient => patient.status === "Completed").length;
+        tableBody.replaceChildren();
+
+        if (!filtered.length) {
+          const row = document.createElement("tr");
+          const cell = document.createElement("td");
+          cell.colSpan = 6;
+          cell.className = "empty-row";
+          cell.textContent = query ? "No matching patient visits." : "No visits yet. Add a patient visit to get started.";
+          row.append(cell);
+          tableBody.append(row);
+          return;
+        }
+
+        for (const patient of filtered) {
+          const row = document.createElement("tr");
+          const nameCell = document.createElement("td");
+          const name = document.createElement("strong");
+          name.textContent = patient.name;
+          nameCell.append(name);
+          if (patient.contact || patient.address) {
+            const details = document.createElement("small");
+            details.textContent = [patient.contact, patient.address].filter(Boolean).join(" · ");
+            nameCell.append(document.createElement("br"), details);
+          }
+          row.append(nameCell);
+          for (const value of [patient.age, dateLabel(patient.visitDate), dateLabel(patient.followUpDate)]) {
+            const cell = document.createElement("td");
+            cell.textContent = value || "—";
+            row.append(cell);
+          }
+          const statusCell = document.createElement("td");
+          const badge = document.createElement("span");
+          badge.className = "status" + (patient.status === "Follow-up scheduled" ? " scheduled" : " completed");
+          badge.textContent = patient.status;
+          statusCell.append(badge);
+          row.append(statusCell);
+          const actionsCell = document.createElement("td");
+          const actions = document.createElement("div");
+          actions.className = "row-actions";
+          const edit = document.createElement("button");
+          edit.className = "row-button";
+          edit.type = "button";
+          edit.textContent = "Edit";
+          edit.dataset.action = "edit";
+          edit.dataset.id = patient.id;
+          const remove = document.createElement("button");
+          remove.className = "row-button delete";
+          remove.type = "button";
+          remove.textContent = "Delete";
+          remove.dataset.action = "delete";
+          remove.dataset.id = patient.id;
+          actions.append(edit, remove);
+          actionsCell.append(actions);
+          row.append(actionsCell);
+          tableBody.append(row);
+        }
+      }
+
+      function clearPatientForm() {
+        patientForm.reset();
+        document.getElementById("patientId").value = "";
+        document.getElementById("formTitle").textContent = "Add patient visit";
+        document.getElementById("savePatientButton").textContent = "Save visit";
+        document.getElementById("cancelEditButton").classList.add("hidden");
+        document.getElementById("visitDate").value = new Date().toISOString().slice(0, 10);
+      }
+
+      patientForm.addEventListener("submit", event => {
+        event.preventDefault();
+        if (!patientForm.reportValidity()) return;
+        const formData = new FormData(patientForm);
+        const id = String(formData.get("patientId"));
+        const patient = {
+          id: id || crypto.randomUUID(),
+          name: String(formData.get("patientName")).trim(),
+          age: Number(formData.get("age")),
+          contact: String(formData.get("contact")).trim(),
+          address: String(formData.get("address")).trim(),
+          visitDate: String(formData.get("visitDate")),
+          followUpDate: String(formData.get("followUpDate")),
+          status: String(formData.get("status")),
+          notes: String(formData.get("notes")).trim()
+        };
+        const previous = patients;
+        patients = id ? patients.map(item => item.id === id ? patient : item) : [patient, ...patients];
+        try {
+          persistPatients();
+          clearPatientForm();
+          render();
+        } catch {
+          patients = previous;
+        }
+      });
+
+      tableBody.addEventListener("click", event => {
+        const button = event.target.closest("button[data-action]");
+        if (!button) return;
+        const patient = patients.find(item => item.id === button.dataset.id);
+        if (!patient) return;
+        if (button.dataset.action === "edit") {
+          document.getElementById("patientId").value = patient.id;
+          document.getElementById("patientName").value = patient.name;
+          document.getElementById("patientAge").value = patient.age;
+          document.getElementById("patientContact").value = patient.contact;
+          document.getElementById("patientAddress").value = patient.address;
+          document.getElementById("visitDate").value = patient.visitDate;
+          document.getElementById("followUpDate").value = patient.followUpDate;
+          document.getElementById("visitStatus").value = patient.status;
+          document.getElementById("visitNotes").value = patient.notes;
+          document.getElementById("formTitle").textContent = "Edit patient visit";
+          document.getElementById("savePatientButton").textContent = "Update visit";
+          document.getElementById("cancelEditButton").classList.remove("hidden");
+          document.getElementById("patientName").focus();
+          return;
+        }
+        if (button.dataset.action === "delete" && window.confirm("Delete this patient visit record?")) {
+          const previous = patients;
+          patients = patients.filter(item => item.id !== patient.id);
+          try {
+            persistPatients();
+            render();
+          } catch {
+            patients = previous;
+          }
+        }
+      });
+
+      registerForm.addEventListener("submit", register);
+      loginForm.addEventListener("submit", signIn);
+      document.getElementById("showLogin").addEventListener("click", () => showAuth("login"));
+      document.getElementById("showRegister").addEventListener("click", () => showAuth("register"));
+      document.getElementById("cancelEditButton").addEventListener("click", clearPatientForm);
+      document.getElementById("logoutButton").addEventListener("click", () => {
+        sessionStorage.removeItem(SESSION_KEY);
+        currentAccount = null;
+        patients = [];
+        showAuth("login");
+      });
+      searchInput.addEventListener("input", render);
+
+      const savedSession = sessionStorage.getItem(SESSION_KEY);
+      if (savedSession) {
+        try {
+          currentAccount = getAccounts().find(account => account.email === savedSession) || null;
+          if (currentAccount) openTracker();
+          else {
+            sessionStorage.removeItem(SESSION_KEY);
+            showAuth("register");
+          }
+        } catch (error) {
+          sessionStorage.removeItem(SESSION_KEY);
+          showAuth("register");
+          console.error("Saved session could not be restored:", error);
+        }
+      } else {
+        showAuth("register");
+      }
+    </script>
+  </body>
+</html>
